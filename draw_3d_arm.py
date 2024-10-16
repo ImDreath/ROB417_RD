@@ -1,5 +1,5 @@
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 def Rx(psi):
     """
@@ -79,13 +79,14 @@ def threeD_rotation_set(joint_angles, joint_axes):
     """
     
     # Initialize an empty list for storing rotation matrices
-    # R_set = [None] * len(joint_angles)
-    R_set = np.empty_like(joint_angles)
-    print(R_set)
-
+    R_set = [None] * len(joint_angles)
+    # R_set = np.empty_like(joint_angles)
+    
     # Loop over the joint angles and axes
     for i, axis in enumerate(joint_axes):
+        # print("sdfd")
         if axis == 'x':
+            # print(joint_angles[i])
             R_set[i] = Rx(joint_angles[i])
         elif axis == 'y':
             R_set[i] = Ry(joint_angles[i])
@@ -282,3 +283,37 @@ def place_links(links_in_world, link_end_set_with_base):
         link_set[i] = link_set[i] + link_end_set_with_base[i]
         
     return link_set
+
+def create_axes(fignum):
+    """
+    Clear out a specified figure and create a clean set of axes in that figure
+    with equal-axis aspect ratio.
+    
+    Parameters:
+    fignum: The number of the figure (or a figure handle) in which to create the axes.
+    
+    Returns:
+    ax: The created axes object.
+    f: The figure object.
+    """
+    # Use plt.figure() to make sure the figure exists and get a figure handle
+    f = plt.figure(fignum)
+    
+    # Use clf() to clear out any existing contents in the figure
+    # plt.clf()
+    
+    # Use plt.axes() to create axes in the figure
+    # ax = f.add_axes([0.1, 0.1, 0.7, 0.7])
+    ax = f.add_subplot(111, projection='3d')
+    
+    # Set the axes to have equal scaling
+    # ax.set_aspect('equal')
+    
+    # # Set the box to be visible
+    # ax.spines['top'].set_visible(True)
+    # ax.spines['bottom'].set_visible(True)
+    # ax.spines['left'].set_visible(True)
+    # ax.spines['right'].set_visible(True)
+    # print(ax)
+    # plt.show()
+    return ax, f

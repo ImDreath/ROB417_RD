@@ -105,11 +105,138 @@ def threeD_draw_links(link_set, link_colors, ax):
         x_data = link_set[i][0, :]
         y_data = link_set[i][1, :]
         z_data = link_set[i][2, :]
-
+        # print(ax)
         # Plot the line and save the handle
         line_handle, = ax.plot(x_data, y_data, z_data, linestyle='-', marker='o', color=link_colors[i])
         l.append(line_handle)
 
     return l
+
+
+def threeD_joint_axis_set(joint_axes):
+    ''' Generate a set of unit vectors along specified x, y, or z axes
+
+    Input:
+
+    joint_axes: a cell array , each element of which is a 
+       one-character string 'x','y', or 'z' that specifies
+       an axis of rotation
+
+    Output:
+
+    joint_axis_vectors: a cell array of the same size as the vector
+       joint_axes, in which each cell contains the 3x1 unit vector in the
+       direction specified in the corresponding entry of joint_axes
+    '''
+    ########
+    #  Start by creating an empty cell array of the same size as joint_axes,
+    #  named 'joint_axis_vectors'
     
-    return l
+    joint_axis_vectors = [None] * len(joint_axes)
+
+    ##########33
+    # Loop over the joint axes
+        
+        ##########3
+    ''' Use 'switch/case' to check which axis the joint is aligned with
+         around. For 'x','y', or 'z', this should result in a unit vector
+         along the appropriate axis.
+        
+         Any other string should trigger the 'otherwise' part of
+         switch/case, in which there should be an 'error' function that
+         tells the user what they did wrong. For example, 
+        
+         error([joint_axis ' is not a known joint axis'])
+         
+         would make the program stop, and tell the user what string was
+         incorrectly supplied as the description of a unit vector.
+        '''
+
+    for i, axis in enumerate(joint_axes):
+        
+        if axis == 'x':
+            joint_axis_vectors[i] = np.array([[1], [0], [0]])
+        elif axis == 'y':
+            joint_axis_vectors[i] = np.array([[0], [1], [0]])
+        elif axis == 'z':
+            joint_axis_vectors[i] = np.array([[0], [0], [1]])
+        else:
+            print(f"{joint_axes} is not a known joint axis")
+    
+    return joint_axis_vectors
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+def ME317_Assignment_draw_3D_arm_individual_links():
+    """
+    Draw the arm as a set of lines, one per link.
+    
+    Returns:
+    link_vectors: List of link vectors.
+    joint_angles: Numpy array of joint angles.
+    joint_axes: List of joint axes.
+    link_colors: List of link colors.
+    link_set: List of start-and-end points for the links.
+    R_links: List of rotation matrices for the links.
+    joint_axis_vectors: List of joint axis vectors.
+    joint_axis_vectors_R: Rotated joint axis vectors.
+    ax: Axis handle for the plot.
+    l: Line handles for the links.
+    l3: Line handles for the joint axis vectors.
+    """
+    
+    # Specify link vectors as a list of 3x1 numpy arrays
+    link_vectors = [np.array([[1], [0], [0]]), np.array([[1], [0], [0]]), np.array([[0], [0], [0.5]])]
+    
+    # Specify joint angles as a numpy array
+    a = (2/5)*np.pi
+    b = (-1/4)*np.pi
+    c = (1/4)*np.pi
+    joint_angles = np.array([a, b, c])
+    
+    # Specify joint axes as a list
+    joint_axes = ['z', 'y', 'x']
+    
+    # Specify colors of links as a list
+    link_colors = ['r', [0.5, 0.5, 0.5], 'b']
+    
+    # Generate link_set and R_links from the 'threeD_robot_arm_links' function
+    (link_set,
+    R_joints,
+    R_links,
+    link_set_local,
+    link_vectors_in_world,
+    links_in_world,
+    link_end_set,
+    link_end_set_with_base) = threeD_robot_arm_links(link_vectors, joint_angles, joint_axes)
+    
+    # Use 'threeD_joint_axis_set' to create joint axis vectors
+    joint_axis_vectors = threeD_joint_axis_set(joint_axes)
+    
+    # Rotate the joint axis vectors using 'vector_set_rotate'
+    joint_axis_vectors_R = draw_3d.vector_set_rotate(joint_axis_vectors, R_links)
+    
+    # Create figure and axes for the plot
+    fignum = 317
+    ax,f = draw_3d.create_axes(fignum)
+    # print(ax)
+    
+    # Draw links and save the handles to the list 'l'
+    l = threeD_draw_links(link_set, link_colors, ax)
+    
+    # Draw dashed lines for joint axis vectors and save handles in 'l3'
+    l3 = []
+
+    for i in range(len(link_set)):
+        x_data = [link_set[i][0, 0], link_set[i][0, 0] + joint_axis_vectors_R[i][0][0]]
+        print(link_set[i][0, 0])
+        print(joint_axis_vectors_R[i][0][0])
+        print(link_set[i][0, 0] + joint_axis_vectors_R[i][0])
+        y_data = [link_set[i][1, 0], link_set[i][1, 0] + joint_axis_vectors_R[i][1][0]]
+        z_data = [link_set[i][2, 0], link_set[i][2, 0] + joint_axis_vectors_R[i][2][0]]
+        
+        l3.append(ax.plot(x_data, y_data, z_data, linestyle=':', color=link_colors[i]))
+    plt.show()
