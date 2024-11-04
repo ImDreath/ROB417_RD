@@ -51,10 +51,11 @@ def Rz(theta):
     R : np.ndarray
         3x3 rotation matrix for rotation by psi around the x-axis.
     """
-    
+     
     R = np.array([[np.cos(theta), -np.sin(theta), 0],
                   [np.sin(theta),  np.cos(theta), 0],
                   [            0,              0, 1]])
+
     
     return R
 
@@ -80,7 +81,7 @@ def threeD_rotation_set(joint_angles, joint_axes):
     
     # Initialize an empty list for storing rotation matrices
     R_set = [None] * len(joint_angles)
-    # R_set = np.empty_like(joint_angles)
+    # R_set = np.empty_like(joint_angles, float)
     
     # Loop over the joint angles and axes
     for i, axis in enumerate(joint_axes):
@@ -172,61 +173,67 @@ def vector_set_cumulative_sum(v_set):
     return v_set_s
 
 
-# def threeD_robot_arm_endpoints(link_vectors, joint_angles, joint_axes):
-#     """
-#     Compute the endpoints of all links in a 3D robotic arm given the link vectors, joint angles, and joint axes.
+def threeD_robot_arm_endpoints(link_vectors, joint_angles, joint_axes):
+    """
+    Compute the endpoints of all links in a 3D robotic arm given the link vectors, joint angles, and joint axes.
 
-#     Parameters:
-#     link_vectors : list of np.ndarray
-#         A 1D list where each element is a 3x1 vector describing the vector from the base to the end of a link.
+    Parameters:
+    link_vectors : list of np.ndarray
+        A 1D list where each element is a 3x1 vector describing the vector from the base to the end of a link.
 
-#     joint_angles : np.ndarray
-#         A 1D array of joint angles.
+    joint_angles : np.ndarray
+        A 1D array of joint angles.
 
-#     joint_axes : list of str
-#         A list where each entry is 'x', 'y', or 'z', designating the axis of the corresponding joint.
+    joint_axes : list of str
+        A list where each entry is 'x', 'y', or 'z', designating the axis of the corresponding joint.
 
-#     Returns:
-#     link_ends : np.ndarray
-#         A 3x(n+1) matrix, where the first column is the base of the first link (at the origin), and the remaining 
-#         columns are the endpoints of the links.
+    Returns:
+    link_ends : np.ndarray
+        A 3x(n+1) matrix, where the first column is the base of the first link (at the origin), and the remaining 
+        columns are the endpoints of the links.
 
-#     Additional Outputs:
-#     R_joints : list of np.ndarray
-#         The rotation matrices associated with the joints.
+    Additional Outputs:
+    R_joints : list of np.ndarray
+        The rotation matrices associated with the joints.
 
-#     R_links : list of np.ndarray
-#         The rotation matrices for the link orientations.
+    R_links : list of np.ndarray
+        The rotation matrices for the link orientations.
 
-#     link_vectors_in_world : list of np.ndarray
-#         The link vectors in their current orientations.
+    link_vectors_in_world : list of np.ndarray
+        The link vectors in their current orientations.
 
-#     link_end_set : list of np.ndarray
-#         The endpoints of the links after taking the cumulative sum of link vectors.
+    link_end_set : list of np.ndarray
+        The endpoints of the links after taking the cumulative sum of link vectors.
     
-#     link_end_set_with_base : list of np.ndarray
-#         The endpoints including the base (origin) point.
-#     """
+    link_end_set_with_base : list of np.ndarray
+        The endpoints including the base (origin) point.
+    """
+
+    # Step 1: Generate a list of rotation matrices corresponding to the joint angles
+    R_joints = threeD_rotation_set(joint_angles, joint_axes)
     
-#     # Step 1: Generate a list of rotation matrices corresponding to the joint angles
-#     R_joints = threeD_rotation_set(joint_angles, joint_axes)
+    # Step 2: Compute the cumulative product of the rotation matrices to get link orientations
+    R_links = rotation_set_cumulative_product(R_joints)
 
-#     # Step 2: Compute the cumulative product of the rotation matrices to get link orientations
-#     R_links = rotation_set_cumulative_product(R_joints)
+    # Step 3: Rotate the link vectors by the link rotation matrices
+    link_vectors_in_world = vector_set_rotate(link_vectors, R_links)
 
-#     # Step 3: Rotate the link vectors by the link rotation matrices
-#     link_vectors_in_world = vector_set_rotate(link_vectors, R_links)
+    # Step 4: Compute the cumulative sum of the rotated link vectors to get the endpoints of each link
+    link_end_set = vector_set_cumulative_sum(link_vectors_in_world)
 
-#     # Step 4: Compute the cumulative sum of the rotated link vectors to get the endpoints of each link
-#     link_end_set = vector_set_cumulative_sum(link_vectors_in_world)
+    # Step 5: Add a zero vector to the start of the link end set (representing the origin)
+    # link_end_set_with_base = [np.array([0, 0, 0])] + link_end_set
 
-#     # Step 5: Add a zero vector to the start of the link end set (representing the origin)
-#     link_end_set_with_base = [np.array([0, 0, 0])] + link_end_set
+    L = len(link_end_set) + 1
+    link_end_set_with_base = [None] * L
+    link_end_set_with_base[0] = np.array([[0], [0], [0]])
+    for i in range(1,L):
+        link_end_set_with_base[i] = link_end_set[i-1]
 
-#     # Step 6: Convert the set of link vectors to a matrix
-#     link_ends = np.column_stack(link_end_set_with_base)
+    # Step 6: Convert the set of link vectors to a matrix
+    link_ends = np.column_stack(link_end_set_with_base)
 
-#     return link_ends, R_joints, R_links, link_vectors_in_world, link_end_set, link_end_set_with_base
+    return link_ends, R_joints, R_links, link_vectors_in_world, link_end_set, link_end_set_with_base
 
 def build_links(link_vectors):
     #works
