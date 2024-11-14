@@ -110,10 +110,12 @@ def arm_Jacobian(link_vectors, joint_angles, joint_axes, link_number):
             # print(f"len(v_diff is {len(v_diff[i])}\n")
             # print(f"v_diff is \n{v_diff[i]}\n")
 
+            # J[i] = np.cross(joint_axis_vectors_R[i], v_diff[i])
             J[i] = np.cross(joint_axis_vectors_R[i].reshape(3), v_diff[i].reshape(3))
+            J_new = J.transpose()
 
 
-    return J, link_ends, link_end_set, link_end_set_with_base, v_diff, joint_axis_vectors, joint_axis_vectors_R, R_links
+    return J_new, link_ends, link_end_set, link_end_set_with_base, v_diff, joint_axis_vectors, joint_axis_vectors_R, R_links
 
 
 def create_subaxes(fignum,m,n,p):
